@@ -19,7 +19,7 @@ module.exports = {
       const mailData = {
         to: email,
         from: "admin@gmail.com",
-        subject: `Your Verification code is is ${randomString}`,
+        subject: `Your Verification code is ${randomString}`,
       };
       createMail(mailData);
       await newUser.save();
@@ -53,7 +53,8 @@ module.exports = {
   verifyUser: async (req, res) => {
     const { verificationCode, email } = req.body;
     try {
-      if (!verificationCode || !email) return res.status(401).json("Provide code");
+      if (!verificationCode || !email)
+        return res.status(401).json("Provide code");
       const user = await User.findOne({ email });
       if (user.verifyCode !== verificationCode)
         return res.status(401).json("Wrong code");
@@ -62,7 +63,7 @@ module.exports = {
       await user.save();
       res.status(200).json("Verified");
     } catch (error) {
-        console.log(error, 'the error')
+      console.log(error, "the error");
       return res.status(500).json(error);
     }
   },
@@ -72,8 +73,8 @@ module.exports = {
       // const emailData = {to: email, from: "app@gmail.com", subject: "Nothing dey happen"}
       const user = await User.findOne({ email });
       if (!user) return res.status(400).json("User not found");
-      const passwordIsMatch = await user.verifyPassword(password)
-      if(!passwordIsMatch) return res.status(401).json('Password dont match')
+      const passwordIsMatch = await user.verifyPassword(password);
+      if (!passwordIsMatch) return res.status(401).json("Wrong Credentials");
       user.lastLogin = new Date();
       await user.save();
       const accessToken = generateAccessToken(user);
@@ -85,7 +86,7 @@ module.exports = {
   },
   getAllUser: async (req, res) => {
     try {
-      const users = await User.find({isAdmin: false});
+      const users = await User.find({ isAdmin: false });
       res.status(200).json(users);
     } catch (error) {
       return res.status(500).json(error);
@@ -118,85 +119,128 @@ module.exports = {
       res.status(500).json(error);
     }
   },
-  getUser: async(req, res)=>{
+  getUser: async (req, res) => {
     try {
-      const user = await User.findById(req.user.id)
-      if(!user) return res.status(401).json('User is not found')
-      console.log(userpdash,'balance')
-      return res.status(200).json(user)
+      const user = await User.findById(req.user.id);
+      if (!user) return res.status(401).json("User is not found");
+      console.log(userpdash, "balance");
+      return res.status(200).json(user);
     } catch (error) {
-      console.log(error)
-      return res.status(300).json(error)
+      console.log(error);
+      return res.status(300).json(error);
     }
   },
-  updateUser : async(req, res)=>{
+  updateUser: async (req, res) => {
     try {
-        const id = req.params.userId
-        const isAdmin = req.user.isAdmin
-        if(!isAdmin) return res.status(401).json('You are forbidden')
-        await User.findByIdAndUpdate(id, {$set: req.body}, {new: true, select: "-password"})
-        res.status(200).json('User updated')
+      const {
+        phoneNumber,
+        country,
+        btc,
+        eth,
+        currPassword,
+        newPassword,
+        litecoin,
+        dogecoin,
+      } = req.body;
+      const id = req.params.userId;
+      // const isAdmin = req.user.isAdmin
+      if (id != req.user.id) {
+        return res.status(401).json("You are forbidden");
+      }
+      const user = await User.findById(id);
+      if (!user) return res.status(401).json("User not found");
+      const newUser = {
+        ...(country && { country }),
+        ...(eth && { etherumAddress: eth }),
+        ...(btc && { bitcoinAddress: btc }),
+        ...(litecoin && { litecoinAddress: litecoin }),
+        ...(dogecoin && { dogecoinaddress: dogecoin }),
+        ...(phoneNumber && { phoneNumber }),
+      };
+      if (newPassword && currPassword) {
+        const isMatch = await user.verifyPassword(currPassword);
+        if (!isMatch) {
+          return res
+            .status(401)
+            .json(
+              "Passwords ensure you have entered the previous password correctly"
+            );
+        }
+        const hashPassword =  bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10))
+        newUser.password = hashPassword;
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $set: newUser },
+        { new: true, select: "-password" }
+      );
+      res.status(200).json(updatedUser);
     } catch (error) {
-        console.log(error)
-        return res.status(500).json(error)
+      console.log(error);
+      return res.status(500).json(error);
     }
   },
-  getAccount: async(req, res)=>{
-    let userId = mongoose.Types.ObjectId(req.user.id)
+  getAccount: async (req, res) => {
+    let userId = mongoose.Types.ObjectId(req.user.id);
     // return console.log(userId)
     try {
       const depTxn = await Transaction.aggregate([
         {
           $match: {
             type: "deposit",
-            user: userId
-          }
+            user: userId,
+          },
         },
         {
           $group: {
             _id: "$type",
-            "total": {$sum: "$amount"}
-          }
-        }
-      ])
+            total: { $sum: "$amount" },
+          },
+        },
+      ]);
       const invTxn = await Transaction.aggregate([
         {
           $match: {
             type: "invest",
-            user: userId
-          }
+            user: userId,
+          },
         },
         {
           $group: {
             _id: "$type",
-            "total": {$sum: "$amount"}
-          }
-        }
-      ])
+            total: { $sum: "$amount" },
+          },
+        },
+      ]);
       const witTxn = await Transaction.aggregate([
         {
           $match: {
             type: "withdraw",
-            user: userId
-          }
+            user: userId,
+          },
         },
         {
           $group: {
             _id: "$type",
-            "total": {$sum: "$amount"}
-          }
-        }
-      ])
+            total: { $sum: "$amount" },
+          },
+        },
+      ]);
       const [depRex, invRex, witRex] = await Promise.all([
         depTxn,
         invTxn,
-        witTxn
-      ])
+        witTxn,
+      ]);
 
-
-      return res.status(200).json({depRex: depRex[0].total, invRex: invRex[0].total, witRex: witRex[0].total})
+      return res.status(200).json({
+        depRex: depRex[0]?.total ? depRex[0].total : 0,
+        invRex: invRex[0]?.total ? invRex[0].total : 0,
+        witRex: witRex[0]?.total ? witRex[0].total : 0,
+      });
     } catch (error) {
-      return res.status(500).json(error)
+      console.log(error, 'from user-account')
+      return res.status(500).json(error);
     }
-  }
+  },
 };
