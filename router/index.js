@@ -33,13 +33,13 @@ const {
 const router = require("express").Router();
 
 //User routes
+router.route("/auth/user-fetch").get(authCheck, getUser)
 router.route("/auth/login").post(checkRequireLoginField, login);
 router.route("/auth/verify").put(verifyUser);
 router.route("/auth/regenerate").put(regenerateVerfificationCode);
 router.route("/auth/register").post(checkRequireRegisterField, register);
-router.route("/auth/user").get(authCheck, getUser)
 // .put(authCheck, selfUpdate);
-router.route("/user/:userId").delete(deleteUser);
+router.route("/user/:userId").delete(authCheck, deleteUser);
 router.route("/user/:userId").put(authCheck, updateUser);
 router.route("/users").get(getAllUser);
 //Deposit routes

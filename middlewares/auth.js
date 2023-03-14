@@ -3,14 +3,21 @@ const { verify } = require("jsonwebtoken");
 
 function authCheck(req, res, next) {
   try {
-    const authToken = req.headers["authorization"];
-    if (!authToken) return res.status(400).json("Not Authorized: No token");
-    const user = verify(authToken, process.env.SECRET, (err, decoded) => {
-      if (err) return res.status(401).json({ message: "Invalid token" });
+    const authToken = req.headers.authorization;
+    if (authToken==null || !authToken) return res.status(400).json("Not Authorized: No token");
+    // const user = verify(authToken, process.env.SECRET)
+    // req.user = {email: user.email, isAdmin: user.isAdmin, id: user.id}
+    verify(authToken, process.env.SECRET, (err, decoded) => {
+      if (err){
+        // console.log(err, 'there is an error')
+        return res.status(401).json({ message: "Invalid token" });
+      } 
       req.user = {email: decoded.email, id: decoded.id, isAdmin: decoded.isAdmin}
       next();
     });
+    // next()
   } catch (error) {
+    console.log(error, 'the final error')
     return res.status(500).json(error);
   }
 }

@@ -1,3 +1,4 @@
+
 const {sign} = require("jsonwebtoken")
 
 function generateRandomString() {
@@ -11,8 +12,8 @@ function generateRandomString() {
 }
 
 
-function generateAccessToken(user){
-  return sign({id: user._id, email: user.email, isAdmin: user.isAdmin}, process.env.SECRET, {expiresIn: '1d'})
+function generateAccessToken(user, secret){
+  return sign({id: user._id, email: user.email, isAdmin: user.isAdmin}, secret, {expiresIn: '1h'})
 }
 
 module.exports = {generateRandomString, generateAccessToken}

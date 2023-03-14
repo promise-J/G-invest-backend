@@ -70,17 +70,15 @@ module.exports = {
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
-      // const emailData = {to: email, from: "app@gmail.com", subject: "Nothing dey happen"}
       const user = await User.findOne({ email });
       if (!user) return res.status(400).json("User not found");
       const passwordIsMatch = await user.verifyPassword(password);
       if (!passwordIsMatch) return res.status(401).json("Wrong Credentials");
       user.lastLogin = new Date();
       await user.save();
-      const accessToken = generateAccessToken(user);
+      const accessToken = generateAccessToken(user, process.env.SECRET);
       return res.status(200).json({ accessToken, user });
     } catch (error) {
-      console.log(error);
       return res.status(500).json(error);
     }
   },
@@ -123,7 +121,6 @@ module.exports = {
     try {
       const user = await User.findById(req.user.id);
       if (!user) return res.status(401).json("User is not found");
-      console.log(userpdash, "balance");
       return res.status(200).json(user);
     } catch (error) {
       console.log(error);
@@ -239,7 +236,6 @@ module.exports = {
         witRex: witRex[0]?.total ? witRex[0].total : 0,
       });
     } catch (error) {
-      console.log(error, 'from user-account')
       return res.status(500).json(error);
     }
   },
