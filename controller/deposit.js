@@ -11,7 +11,6 @@ module.exports = {
       let {
         amount,
         paymentType,
-        description = "Request to deposit",
       } = req.body;
       if (!amount || !paymentType)
       return res.status(401).json("Please provide complete fields");
@@ -48,6 +47,7 @@ module.exports = {
         message: "Deposit created",
       });
     } catch (error) {
+      console.log(error, 'from the deposit')
       return res.status(500).json(error);
     }
   },

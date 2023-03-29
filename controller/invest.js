@@ -18,7 +18,7 @@ module.exports = {
       console.log(investPlan, 'plan id')
       if (amount < investPlan.min || amount > investPlan.max)
         return res
-          .status(401)
+          .status(404)
           .json(
             `Amount must be in range of the plan. Min: ${investPlan.min}  Max: ${investPlan.max}`
           );

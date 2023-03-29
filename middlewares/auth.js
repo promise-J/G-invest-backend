@@ -40,7 +40,7 @@ function checkRequireRegisterField(req, res, next) {
 function checkRequireLoginField(req, res, next) {
   const { email, password } = req.body;
   if (!email || !password) {
-    res.status(404).json("Field must be complete");
+    res.status(404).json("Fields must be complete");
   } else {
     next();
   }

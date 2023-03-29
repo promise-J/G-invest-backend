@@ -25,6 +25,7 @@ const template = `
     </main>
 </body>
 </html>
+
 `
 
 module.exports = {template}

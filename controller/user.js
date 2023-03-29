@@ -70,7 +70,7 @@ module.exports = {
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
-      const user = await User.findOne({ email }).select("-password");
+      const user = await User.findOne({ email });
       if (!user) return res.status(400).json("User not found");
       const passwordIsMatch = await user.verifyPassword(password);
       if (!passwordIsMatch) return res.status(401).json("Wrong Credentials");
@@ -79,6 +79,7 @@ module.exports = {
       const accessToken = generateAccessToken(user, process.env.SECRET);
       return res.status(200).json({ accessToken, user });
     } catch (error) {
+      console.log(error, 'from the user login backend')
       return res.status(500).json(error);
     }
   },
@@ -236,6 +237,7 @@ module.exports = {
         witRex: witRex[0]?.total ? witRex[0].total : 0,
       });
     } catch (error) {
+      console.log(error, 'the error from user-account')
       return res.status(500).json(error);
     }
   },
